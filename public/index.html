@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Highlights</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="noise"></div>
+
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-row">
+        <h1 class="title">Highlights</h1>
+        <div class="actions">
+          <button class="btn-icon" id="themeBtn" aria-label="Toggle theme">
+            <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+          <button class="btn-icon" id="refreshBtn" aria-label="Refresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="meta-row">
+        <span class="date" id="dateDisplay"></span>
+        <div class="live-badge" id="statusBadge">
+          <span class="live-dot" id="statusDot"></span>
+          <span id="statusText">Loading</span>
+        </div>
+      </div>
+
+      <nav class="tabs" id="filterBar">
+        <button class="tab active" data-filter="all">All</button>
+        <button class="tab" data-filter="Football">Football</button>
+        <button class="tab" data-filter="Basketball">Basketball</button>
+        <button class="tab" data-filter="NBA">NBA</button>
+        <button class="tab" data-filter="F1">F1</button>
+      </nav>
+    </header>
+
+    <!-- Count -->
+    <div class="section-bar">
+      <span id="highlightCount" class="count"></span>
+    </div>
+
+    <!-- Grid -->
+    <main class="grid" id="highlightsGrid">
+      <div class="card skel"><div class="skel-img"></div><div class="skel-body"><div class="skel-ln w70"></div><div class="skel-ln w40"></div></div></div>
+      <div class="card skel"><div class="skel-img"></div><div class="skel-body"><div class="skel-ln w70"></div><div class="skel-ln w40"></div></div></div>
+      <div class="card skel"><div class="skel-img"></div><div class="skel-body"><div class="skel-ln w70"></div><div class="skel-ln w40"></div></div></div>
+      <div class="card skel"><div class="skel-img"></div><div class="skel-body"><div class="skel-ln w70"></div><div class="skel-ln w40"></div></div></div>
+      <div class="card skel"><div class="skel-img"></div><div class="skel-body"><div class="skel-ln w70"></div><div class="skel-ln w40"></div></div></div>
+      <div class="card skel"><div class="skel-img"></div><div class="skel-body"><div class="skel-ln w70"></div><div class="skel-ln w40"></div></div></div>
+    </main>
+
+    <!-- Empty -->
+    <div class="empty" id="emptyState" style="display:none">
+      <p>No highlights yet</p>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span>Auto-refresh every 5 min</span>
+      <span id="lastUpdated"></span>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

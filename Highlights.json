@@ -1,0 +1,411 @@
+{
+  "name": "Highlights",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 11
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -416,
+        -16
+      ],
+      "id": "f0b56676-a3f4-4ec2-a801-ced4e95517f9",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        576,
+        128
+      ],
+      "id": "3922f83e-78ce-4855-8c8b-ab9572b84721",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "NFFH0KQaAZR98S1W",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. הגדרת זמן: 24 שעות אחורה\nconst twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);\n\n// 2. הגדרות סינון\nconst clOnlyNodes = ['Atletico Madrid', 'Real Madrid', 'Arsenal', 'Bayern Munich', 'Milan', 'Inter'];\nconst clKeywords = ['champions league', 'ucl', 'ליגת האלופות'];\nconst f1Keywords = ['race highlights', 'qualifying highlights', 'sprint highlights'];\nconst generalHighlights = ['highlight', 'highlights', 'recap', 'תקציר', 'full game'];\nconst topTenKeyword = 'top 10';\n\n// 3. ביצוע הסינון\nconst filteredItems = items.filter(i => {\n    const title = (i.json.title || \"\").toLowerCase();\n    const author = (i.json.author || \"\").toLowerCase();\n    const link = (i.json.link || \"\").toLowerCase();\n    const pubDate = new Date(i.json.pubDate);\n    const nodeName = i.main?.[0]?.node?.name || \"\";\n\n    if (!i.json.pubDate || isNaN(pubDate)) return false;\n    if (pubDate < twentyFourHoursAgo) return false;\n\n    const hasHighlightKeyword = generalHighlights.some(key => title.includes(key));\n    const hasTopTen = title.includes(topTenKeyword);\n    const isIsraelContext =\n        title.includes('israel') ||\n        title.includes('ישראל') ||\n        title.includes('maccabi') ||\n        title.includes('hapoel');\n\n    if (nodeName === 'FIBA' || title.includes('fiba') || author.includes('fiba')) {\n        return isIsraelContext || hasTopTen;\n    }\n\n    if (\n        nodeName === 'EuroLeague' ||\n        nodeName === 'NBA' ||\n        title.includes('euroleague') ||\n        title.includes('nba') ||\n        author.includes('euroleague') ||\n        author.includes('nba')\n    ) {\n        return hasHighlightKeyword || hasTopTen;\n    }\n\n    if (\n        nodeName === 'F1' ||\n        author.includes('formula 1') ||\n        title.includes('grand prix') ||\n        title.includes('formula 1') ||\n        title.includes('f1') ||\n        link.includes('formula1')\n    ) {\n        return f1Keywords.some(key => title.includes(key));\n    }\n\n    if (clOnlyNodes.includes(nodeName)) {\n        return clKeywords.some(key => title.includes(key));\n    }\n\n    if (nodeName === 'Manchester United') {\n        if (title.includes('u18') || title.includes('u21') || title.includes('women')) return false;\n        return hasHighlightKeyword;\n    }\n\n    if (\n        nodeName === 'Bundesliga' ||\n        nodeName === 'BVB' ||\n        title.includes('bundesliga') ||\n        author.includes('bundesliga')\n    ) {\n        return hasHighlightKeyword;\n    }\n\n    return false;\n});\n\nif (filteredItems.length === 0) return [];\n\n// 4. שליחת רשימה נקייה ומסודרת לסוכן\nconst cleanList = filteredItems.map(i => {\n    const cleanTitle = (i.json.title || \"\").replace(/\\n/g, ' ').trim();\n    return `${cleanTitle} | ${i.json.link}`;\n}).join('\\n');\n\nreturn [\n  {\n    json: {\n      text: cleanList\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        -16
+      ],
+      "id": "6530974c-f963-40c3-9494-18e23604ae2f",
+      "name": "Time & Filter"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Clean and format the following sports list according to your rules:\n\n{{ $json.text }}",
+        "options": {
+          "systemMessage": "You are a Sports Data Formatter. \n\n### RULES:\n1. OUTPUT FORMAT: [Match Name] | [League] | [Link]\n   - Example: Team A vs Team B | NBA | https://youtube.com/...\n2. MATCH NAME: Extract only the two teams/countries as \"Team A vs Team B\". \n   - Remove descriptions like \"Backheel puts...\" or \"Full Highlights\".\n   - For compilations, use \"Top 10 Plays\".\n3. LEAGUE: Use ONLY these short names 1 word: NBA, EuroLeague, FIBA, Bundesliga, UCL, F1.\n4. LINK: Keep the original URL.\n\n### STRICT RESTRICTION:\n- Return ONLY the formatted lines. \n- NO intro text, NO outro text, NO markdown code blocks (```).\n- Use EXACTLY one line per match.",
+          "batching": {
+            "batchSize": 1
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        576,
+        -16
+      ],
+      "id": "402b90fb-b20f-43d9-bcb4-bbe8dfcb719e",
+      "name": "Primary AI agent",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Clean and format the following sports list according to your rules:\n\n{{ $json.text }}",
+        "options": {
+          "systemMessage": "You are a Sports Data Formatter. \n\n### RULES:\n1. OUTPUT FORMAT: [Match Name] | [League] | [Link]\n   - Example: Team A vs Team B | NBA | https://youtube.com/...\n2. MATCH NAME: Extract only the two teams/countries as \"Team A vs Team B\". \n   - Remove descriptions like \"Backheel puts...\" or \"Full Highlights\".\n   - For compilations, use \"Top 10 Plays\".\n3. LEAGUE: Use ONLY these short names 1 word: NBA, EuroLeague, FIBA, Bundesliga, UCL, F1.\n4. LINK: Keep the original URL.\n\n### STRICT RESTRICTION:\n- Return ONLY the formatted lines. \n- NO intro text, NO outro text, NO markdown code blocks (```).\n- Use EXACTLY one line per match.",
+          "batching": {
+            "batchSize": 1
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        576,
+        272
+      ],
+      "id": "46248c2c-4f79-4f74-a8e9-571133a3b21c",
+      "name": "Alternative AI Agent",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = items[0].json.output;\nif (!response || response.includes('IGNORE')) return [];\n\n// 1. פיצול וניקוי בסיסי\nlet matches = response.split(/\\n|\\\\n/)\n    .map(line => line.trim())\n    .filter(line => line.includes('|'))\n    .map(line => {\n        const parts = line.split('|').map(p => p.trim());\n        return { \n            name: parts[0], \n            league: parts[1], \n            link: parts[2]?.split(' ')[0] \n        };\n    });\n\n// 2. הגדרות עדיפות ואימוג'ים\nconst leagueSettings = {\n    'F1': { priority: 1, icon: '🏎️' },\n    'FIBA': { priority: 2, icon: '🏀' },\n    'EuroLeague': { priority: 3, icon: '🏀' },\n    'NBA': { priority: 4, icon: '🏀' },\n    'UCL': { priority: 5, icon: '🏆' },\n    'Bundesliga': { priority: 6, icon: '⚽' },\n    'Manchester United': { priority: 7, icon: '⚽' }\n};\n\n// 3. מיון לפי עדיפות (Priority)\nmatches.sort((a, b) => {\n    const priorityA = leagueSettings[a.league]?.priority || 99;\n    const priorityB = leagueSettings[b.league]?.priority || 99;\n    return priorityA - priorityB;\n});\n\n// 4. עיבוד סופי - הוספת אייקונים ומבנה n8n\nreturn matches.map(m => {\n    const isIsrael = /israel|ישראל|maccabi|hapoel/i.test(m.name);\n    \n    // לוגיקה: ישראל מקבלת דגל, כל השאר לפי האייקון של הליגה\n    let icon = isIsrael ? '🇮🇱' : (leagueSettings[m.league]?.icon || '⚽');\n\n    return {\n        json: { \n            name: m.name, \n            league: `${icon} ${m.league}`, \n            link: m.link \n        }\n    };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        -32
+      ],
+      "id": "bc814755-f8ef-4b28-b890-eef93f741516",
+      "name": "Formatter & Sorter"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {
+          "includeBinaries": false
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1232,
+        -32
+      ],
+      "id": "a7f36a39-714e-434a-8332-e8c16866afe5",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "chatId": "862900036",
+        "text": "=———————————————\n     🏟️ End of Highlights            \n———————————————",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1392,
+        -32
+      ],
+      "id": "24b22d35-1101-4bcf-9e01-700374df3836",
+      "name": "🏟️ End of Highlights",
+      "webhookId": "bd1425e0-02b3-48d8-b1b2-8b729714b32c",
+      "credentials": {
+        "telegramApi": {
+          "id": "ReafSnzm3CyN2aqf",
+          "name": "Highlights Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "862900036",
+        "text": "=———————————————\n  📅 {{ new Date(new Date().getTime() - 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { weekday: 'long' }) }} | {{ new Date(new Date().getTime() - 24 * 60 * 60 * 1000).toLocaleDateString('en-GB').replace(/\\//g, '.') }}            \n              Highlights  \n———————————————",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -240,
+        -16
+      ],
+      "id": "09d4df0a-a596-41ab-86ba-7cc380169491",
+      "name": "Beginning",
+      "webhookId": "29794c6e-f4f6-404b-9e5a-682c877b0a91",
+      "credentials": {
+        "telegramApi": {
+          "id": "ReafSnzm3CyN2aqf",
+          "name": "Highlights Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "862900036",
+        "text": "=<b>{{ $json.league }}</b>: <a href=\"{{ $json.link }}\">{{ $json.name }}</a>",
+        "additionalFields": {
+          "appendAttribution": false,
+          "disable_web_page_preview": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1072,
+        -32
+      ],
+      "id": "0a702ee1-532f-4bb2-b04f-c75d3a79723b",
+      "name": "The Highlights",
+      "webhookId": "2276a200-98a2-460f-b7f1-4e10b3c1ba0e",
+      "credentials": {
+        "telegramApi": {
+          "id": "ReafSnzm3CyN2aqf",
+          "name": "Highlights Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        192,
+        -16
+      ],
+      "id": "c7059ec4-da22-4469-bd9c-c56018ecdcd9",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {
+        "model": "=llama3.2",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        576,
+        384
+      ],
+      "id": "b136827e-74f6-4801-9ab4-d178a4148f04",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "ZvmKIGHdije2CY2U",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// רשימת כל הליגות והקישורים שלהן - קל להוסיף/למחוק מכאן\nconst feeds = [\n  { url: \"https://www.youtube.com/feeds/videos.xml?channel_id=UCB_qr75-ydFVKSF9Dmo6izg\", league: \"F1\" },\n  { url: \"https://www.youtube.com/feeds/videos.xml?channel_id=UC0LrZO9wORIqn_aRJtKdgfA\", league: \"NBA\" },\n  { url: \"https://www.youtube.com/feeds/videos.xml?channel_id=UCGr3nR_XH9r6E5b09ZJAT9w\", league: \"EuroLeague\" },\n  { url: \"https://www.youtube.com/feeds/videos.xml?channel_id=UCtInrnU3QbWqFGsdKT1GZtg\", league: \"FIBA\" },\n  { url: \"https://www.youtube.com/feeds/videos.xml?channel_id=UC6UL29enLNe4mqwTfAyeNuw\", league: \"Bundesliga\" },\n  { url: \"https://www.youtube.com/feeds/videos.xml?channel_id=UC6yW44UGJJBvYTlfC7CRg2Q\", league: \"Manchester United\" },\n  { url: \"https://www.youtube.com/feeds/videos.xml?channel_id=UCWV3obpZVGgJ3j9FVhEjF2Q\", league: \"Real Madrid\" },\n  { url: \"https://www.youtube.com/feeds/videos.xml?channel_id=UCK8rTVgp3-MebXkmeJcQb1Q\", league: \"BVB\" },\n  { url: \"https://www.youtube.com/feeds/videos.xml?channel_id=UCuzKFwdh7z2GHcIOX_tXgxA\", league: \"Atletico Madrid\" },\n  { url: \"https://www.youtube.com/feeds/videos.xml?channel_id=UCpryVRk_VDudG8SHXgWcG0w\", league: \"Arsenal\" },\n  { url: \"https://www.youtube.com/feeds/videos.xml?channel_id=UCZkcxFIsqW5htimoUQKA0iA\", league: \"Bayern\" }\n];\n\nreturn feeds.map(feed => ({ json: feed }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        -16
+      ],
+      "id": "22c0fbc5-287d-4009-9f6e-83ab860b2e12",
+      "name": "RSS Leagues"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Beginning",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Primary AI agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Time & Filter": {
+      "main": [
+        [
+          {
+            "node": "Primary AI agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Primary AI agent": {
+      "main": [
+        [
+          {
+            "node": "Formatter & Sorter",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alternative AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alternative AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Formatter & Sorter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatter & Sorter": {
+      "main": [
+        [
+          {
+            "node": "The Highlights",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "🏟️ End of Highlights",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Beginning": {
+      "main": [
+        [
+          {
+            "node": "RSS Leagues",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "The Highlights": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Time & Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Alternative AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Leagues": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Jerusalem",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "jIcH2dGHrH83nwJv"
+  },
+  "versionId": "f75ed25f-4396-4581-8c9d-716a87e1dde6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a815ba84dd9a952af0594fab79e0b80ee549f27dd41354833e99df4d1f967bf6"
+  },
+  "id": "EmIK2CKveTp8shSj",
+  "tags": []
+}
