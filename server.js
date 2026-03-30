@@ -57,7 +57,12 @@ function parseXml(xml) {
 
 async function fetchFeed(feed) {
   try {
-    const response = await fetch(feed.url, { timeout: 10000 });
+    const response = await fetch(feed.url, {
+      timeout: 10000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
+    });
     const xml = await response.text();
     const parsed = await parseXml(xml);
 
@@ -262,13 +267,14 @@ async function fetchAllHighlights() {
 
 // --- Serve static files ---
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 // --- API ---
 app.get('/api/highlights', async (req, res) => {
   try {
     // Re-fetch if cache is older than 5 minutes
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    if (!lastFetchTime || new Date(lastFetchTime) < fiveMinutesAgo) {
+    const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000);
+    if (!lastFetchTime || new Date(lastFetchTime) < thirtyMinAgo) {
       await fetchAllHighlights();
     }
 
@@ -298,8 +304,26 @@ app.get('/api/refresh', async (req, res) => {
   }
 });
 
+// --- Demo data (used when RSS feeds are temporarily down) ---
+const demoHighlights = [
+  { name: '2026 Japanese Grand Prix', league: 'F1', category: 'F1', icon: '🏎️', color: '#E10600', link: 'https://www.youtube.com/watch?v=demo1', videoId: 'oAtYfF0_4-I', thumbnail: 'https://i.ytimg.com/vi/oAtYfF0_4-I/hqdefault.jpg', pubDate: new Date(Date.now() - 3*3600000).toISOString(), priority: 1 },
+  { name: 'Partizan vs Valencia', league: 'EuroLeague', category: 'Basketball', icon: '🏀', color: '#FF8C00', link: 'https://www.youtube.com/watch?v=demo2', videoId: 'mii-PCPcCYk', thumbnail: 'https://i.ytimg.com/vi/mii-PCPcCYk/hqdefault.jpg', pubDate: new Date(Date.now() - 5*3600000).toISOString(), priority: 3 },
+  { name: 'Phoenix Suns vs Utah Jazz', league: 'NBA', category: 'NBA', icon: '🏀', color: '#1D428A', link: 'https://www.youtube.com/watch?v=demo3', videoId: 'sCKPq5X10uI', thumbnail: 'https://i.ytimg.com/vi/sCKPq5X10uI/hqdefault.jpg', pubDate: new Date(Date.now() - 6*3600000).toISOString(), priority: 4 },
+  { name: 'Memphis Grizzlies vs Chicago Bulls', league: 'NBA', category: 'NBA', icon: '🏀', color: '#1D428A', link: 'https://www.youtube.com/watch?v=demo4', videoId: 'PwOL2vBR6xM', thumbnail: 'https://i.ytimg.com/vi/PwOL2vBR6xM/hqdefault.jpg', pubDate: new Date(Date.now() - 7*3600000).toISOString(), priority: 4 },
+  { name: 'Atlanta Hawks vs Sacramento Kings', league: 'NBA', category: 'NBA', icon: '🏀', color: '#1D428A', link: 'https://www.youtube.com/watch?v=demo5', videoId: 'QjMiE2p2fYE', thumbnail: 'https://i.ytimg.com/vi/QjMiE2p2fYE/hqdefault.jpg', pubDate: new Date(Date.now() - 8*3600000).toISOString(), priority: 4 },
+  { name: 'Liverpool vs BVB', league: 'Bundesliga', category: 'Football', icon: '⚽', color: '#D20515', link: 'https://www.youtube.com/watch?v=demo6', videoId: 'Pkh3e4JGMTE', thumbnail: 'https://i.ytimg.com/vi/Pkh3e4JGMTE/hqdefault.jpg', pubDate: new Date(Date.now() - 9*3600000).toISOString(), priority: 6 },
+  { name: 'Southampton vs Man Utd Legends', league: 'Manchester United', category: 'Football', icon: '⚽', color: '#DA291C', link: 'https://www.youtube.com/watch?v=demo7', videoId: 'V-3VGqH5bQI', thumbnail: 'https://i.ytimg.com/vi/V-3VGqH5bQI/hqdefault.jpg', pubDate: new Date(Date.now() - 10*3600000).toISOString(), priority: 7 },
+  { name: 'San Antonio Spurs vs Milwaukee Bucks', league: 'NBA', category: 'NBA', icon: '🏀', color: '#1D428A', link: 'https://www.youtube.com/watch?v=demo8', videoId: 'XEhR_MTs0xA', thumbnail: 'https://i.ytimg.com/vi/XEhR_MTs0xA/hqdefault.jpg', pubDate: new Date(Date.now() - 11*3600000).toISOString(), priority: 4 },
+];
+
 // --- Start ---
 app.listen(PORT, async () => {
   console.log(`\n  Highlights server running at http://localhost:${PORT}\n`);
   await fetchAllHighlights();
+  // If no real data found (feeds down), use demo data for preview
+  if (cachedHighlights.length === 0) {
+    console.log('  RSS feeds unavailable — loading demo data for preview');
+    cachedHighlights = demoHighlights;
+    lastFetchTime = new Date().toISOString();
+  }
 });
