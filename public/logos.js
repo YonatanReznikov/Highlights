@@ -12,4 +12,9 @@ window.LEAGUE_LOGOS = {
   'BVB':               '/images/bundesliga.png',
   'Atletico Madrid':   '/images/ucl.png',
   'Bayern Munich':     '/images/bundesliga.png',
+  'Israel':            '/images/Flag_of_Israel.svg.png',
+  'Germany':           '/images/Flag_of_Germany.svg.png',
+  'Germany-DFB':       '/images/DFB.png',
+  'England':           '/images/Flag_of_England.svg.webp',
+  'Netherlands':       '/images/Flag_of_the_Netherlands.svg.png',
 };

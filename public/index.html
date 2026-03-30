@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>High Sport Lights</title>
-  <link rel="icon" type="image/png" href="/images/LOGO.png">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧔🏻‍♂️</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
@@ -42,7 +42,10 @@
       </div>
     </header>
 
-    <!-- FILTERS -->
+    <!-- DAY PICKER -->
+    <nav class="days" id="dayBar"></nav>
+
+    <!-- SPORT FILTERS -->
     <nav class="filters" id="filterBar">
       <button class="chip on" data-filter="all"><span>All</span></button>
       <button class="chip" data-filter="Football"><span>⚽</span><span>Football</span></button>
@@ -68,7 +71,19 @@
     <footer class="ft">
       <span>Auto-refresh 30 min</span>
       <span id="lastUpdated"></span>
+      <span class="ft-sep">|</span>
+      <span class="ft-credit">Crafted by <strong>Yonatan R.</strong></span>
     </footer>
+  </div>
+
+  <!-- VIDEO PLAYER MODAL -->
+  <div class="player-overlay" id="playerOverlay">
+    <div class="player-wrap">
+      <button class="player-close" id="playerClose" aria-label="Close">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <div class="player-frame" id="playerFrame"></div>
+    </div>
   </div>
 
   <script src="logos.js"></script>
