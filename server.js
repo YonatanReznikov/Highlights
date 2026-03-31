@@ -139,7 +139,8 @@ function filterItem(item) {
   }
 
   if (clOnlyNodes.includes(league)) {
-    return clKeywords.some(key => title.includes(key));
+    if (/\blive\b|watchparty|watch party|preview|presser|press conference/i.test(title)) return false;
+    return clKeywords.some(key => title.includes(key)) && hasHighlightKeyword;
   }
 
   if (league === 'Manchester United') {
