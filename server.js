@@ -155,11 +155,11 @@ function filterItem(item) {
     return hasHighlightKeyword;
   }
 
-  // Israel — all national teams (all ages), filter for match summaries
+  // Israel — senior men's team only
   if (league === 'Israel') {
+    if (/נשים|נוער|צעירה|צעירים|u17|u19|u21|women|youth|girl/i.test(title)) return false;
+    if (/ליגת העל לנוער|ליגת העל לנשים/i.test(title)) return false;
     const hasIsraelHighlight = title.includes('תקציר') || title.includes('highlight') || title.includes('recap');
-    // Exclude women's matches
-    // Keep all age groups (נוער, צעירה, בוגרת, etc.)
     return hasIsraelHighlight;
   }
 
@@ -213,15 +213,41 @@ function formatMatchName(title) {
     }
   }
 
-  // Hebrew: "ליגת העל לנוער | מחזור 22 | מכבי חיפה - ביתר ירושלים | תקציר"
-  const hebrewMatch = title.match(/([^|]+\s+-\s+[^|]+)\s*\|\s*תקציר/);
-  if (hebrewMatch) {
-    return hebrewMatch[1].replace(/\s*\|\s*$/, '').trim();
+  // Hebrew team name translation
+  const hebrewToEnglish = {
+    'ישראל': 'Israel', 'גיאורגיה': 'Georgia', 'בלגיה': 'Belgium', 'אוסטריה': 'Austria',
+    'צרפת': 'France', 'גרמניה': 'Germany', 'ספרד': 'Spain', 'איטליה': 'Italy',
+    'אנגליה': 'England', 'הולנד': 'Netherlands', 'פורטוגל': 'Portugal', 'ברזיל': 'Brazil',
+    'ארגנטינה': 'Argentina', 'קרואטיה': 'Croatia', 'סרביה': 'Serbia', 'יוון': 'Greece',
+    'טורקיה': 'Turkey', 'פולין': 'Poland', 'רומניה': 'Romania', 'שוודיה': 'Sweden',
+    'נורבגיה': 'Norway', 'דנמרק': 'Denmark', 'שוויץ': 'Switzerland', 'צ\'כיה': 'Czech Republic',
+    'סקוטלנד': 'Scotland', 'וויילס': 'Wales', 'אירלנד': 'Ireland', 'אלבניה': 'Albania',
+    'הונגריה': 'Hungary', 'בוסניה': 'Bosnia', 'סלובניה': 'Slovenia', 'סלובקיה': 'Slovakia',
+    'אוקראינה': 'Ukraine', 'רוסיה': 'Russia', 'פינלנד': 'Finland', 'אייסלנד': 'Iceland',
+    'מונטנגרו': 'Montenegro', 'צפון מקדוניה': 'North Macedonia', 'קפריסין': 'Cyprus',
+    'לוקסמבורג': 'Luxembourg', 'מולדובה': 'Moldova', 'ליטא': 'Lithuania', 'לטביה': 'Latvia',
+    'אסטוניה': 'Estonia', 'מלטה': 'Malta', 'אזרבייג\'ן': 'Azerbaijan', 'קזחסטן': 'Kazakhstan',
+    'ארמניה': 'Armenia', 'בולגריה': 'Bulgaria', 'קוסובו': 'Kosovo',
+  };
+  function translateHebrew(name) {
+    let result = name.trim();
+    for (const [heb, eng] of Object.entries(hebrewToEnglish)) {
+      result = result.replace(new RegExp(heb, 'g'), eng);
+    }
+    return result;
   }
-  // Also: "תקציר המשחק" at end
-  const hebrewMatch2 = title.match(/\|\s*([^|]+-[^|]+?)\s*\|\s*תקציר/);
-  if (hebrewMatch2) {
-    return hebrewMatch2[1].trim();
+
+  // Hebrew: "ידידות | גיאורגיה - ישראל | 2-2 | תקציר המשחק"
+  // Find pipe section with " - " that has two teams
+  for (const sec of sections) {
+    const hebDash = sec.match(/^(.+?)\s+-\s+(.+?)$/);
+    if (hebDash) {
+      let a = translateHebrew(hebDash[1]), b = translateHebrew(hebDash[2]);
+      // Only if translation produced English
+      if (/[a-zA-Z]/.test(a) && /[a-zA-Z]/.test(b)) {
+        return `${a} vs ${b}`;
+      }
+    }
   }
 
   // German: "INSANE WIRTZ SHOW!!! 4 SCORER | Switzerland vs Germany"
